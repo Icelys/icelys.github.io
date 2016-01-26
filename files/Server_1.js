@@ -16,7 +16,11 @@ var Interface2 = "☁ Interface2";
 var Command = "☁ Command";
 var Trigger = "☁ Trigger";
 
-
+function isbanned(usr){
+	var filec = fs.readFileSync("ban.txt", "utf8");
+	var = filec.split("\n");
+	return banned.indexOf(usr)!=-1;
+}
 
 /*--------------------FILE IO--------------------*/
 var f_path="fileio/savedata.txt";
@@ -188,35 +192,39 @@ Scratch.UserSession.load(function(err, user) {
     			}
 
     			log(commands[mode]+": "+username);
+    			if(!isbanned(username)){
+	    			switch(mode){
+	    				case 1:
+	    					log(username+": "+sentData);
 
-    			switch(mode){
-    				case 1:
-    					log(username+": "+sentData);
+	    					if(getUserData(username)==-1){
+	    						newUserData(username, sentData);
+	    					} else {
+	    						modifyData(username, sentData);
+	    					}
+	    					cloud.set(Interface1, encode("Data saved offline."));
+	    					break;
 
-    					if(getUserData(username)==-1){
-    						newUserData(username, sentData);
-    					} else {
-    						modifyData(username, sentData);
-    					}
-    					cloud.set(Interface1, encode("Data saved offline."));
-    					break;
+	    				case 2:
+	    					log("Getting "+username+"'s data...");
+	    					tmp = getUserData(username);
+	    					if(tmp==-1){
+	    						log("Error: User does not exist");
+	    						cloud.set(Interface1, encode("Error: User does not exist"));
+	    					} else {
+	    						log("Got: "+tmp);
+	    						cloud.set(Interface1, encode(tmp));
+	    					}
+	    					break;
 
-    				case 2:
-    					log("Getting "+username+"'s data...");
-    					tmp = getUserData(username);
-    					if(tmp==-1){
-    						log("Error: User does not exist");
-    						cloud.set(Interface1, encode("Error: User does not exist"));
-    					} else {
-    						log("Got: "+tmp);
-    						cloud.set(Interface1, encode(tmp));
-    					}
-    					break;
+	    				default:
+	    					log("Invalid command: "+mode);
+	    					cloud.set(Interface1, encode("That is not a valid command!"));
+	    					break;
+	    			}
+    			} else {
+    				cloud.set(Interface1, encode("Sorry, it seems your request was denied. (403) If you think this is an error, contact @Icely"));
 
-    				default:
-    					log("Invalid command: "+mode);
-    					cloud.set(Interface1, encode("That is not a valid command!"));
-    					break;
     			}
 				
 				cloud.set(name, 0)
