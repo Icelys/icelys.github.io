@@ -110,17 +110,18 @@ function withdraw (username, amount, recipient) {
 					
 
 					if (idIndex == -1 || transIndex == -1) {
-						console.log("if");
+
 						response = "@2User doesn't exist";
 						deferred.resolve();
 					} else {
 						if(username != recipient){
-							console.log("else");
+
 							
 							if(indv[idIndex][1]-amount>=0 && amount > 0) { // Can spend that many credits
 								indv[idIndex][1] = parseInt(indv[idIndex][1]) - amount; //Withdraw
 								indv[transIndex][1] = parseInt(indv[transIndex][1]) + parseInt(amount);
 								response = "!Withdrawn!";
+								console.log("Withdrew "+amount+" credits from "+username+" to "+recipient);
 							} else {
 								response = "@1Not enough credits!";
 							}
@@ -164,7 +165,7 @@ function sendResponse(){
 function doWithdraw(w, a, r){
 	withdraw(w, a, r).then(function(){
 
-		console.log("Done request; Status: %s", response);
+		console.log("Done request by " + w + "; Status: %s", response);
 
 	}).then(sendResponse);
 
@@ -204,27 +205,35 @@ function doAllStuff(cloud, n, v){
 			rData.splice(5,1); // Don't need the hidden chars
 			file = readFile().replace("\r", "").split("\n");
 
-			for(var i = 0; i<file.length; i++){
+			for(var i = 0; i<file.length-1; i++){
 				file[i] = file[i].split("|");
 			}
+			file.pop();
 
-			myKey = file[index(file, rData[0], 0)][1];
+			var keyIndex = index(file, rData[0], 0);
+			if(keyIndex == -1){
 
-			if(rData[3]!= lastTransID){
-				lastTransID = rData[3];
-				if(rData[4]==myKey){
-					doWithdraw(rData[0], rData[1], rData[2]);
+				response = "@2User doesn't exist";
+
+			} else {
+				myKey = file[keyIndex][1];
+
+				if(rData[3]!= lastTransID){
+					lastTransID = rData[3];
+					if(rData[4]==myKey){
+						doWithdraw(rData[0], rData[1], rData[2]);
+					} else {
+						console.log("Invalid Key!");
+						response = "@3Invalid Key!";
+						sendResponse();
+					}
 				} else {
-					console.log("Invalid Key!");
-					response = "@3Invalid Key!";
+					console.log("Ditto ID!");
+					response = "@4Internal Error!!!";
 					sendResponse();
 				}
-			} else {
-				console.log("Ditto ID!");
-				response = "@4Internal Error!!!";
-				sendResponse();
 			}
-
+			
 			deferred.resolve();
 
 
@@ -238,21 +247,24 @@ function doAllStuff(cloud, n, v){
 }
 
 var cloudG = 0;
+var text2add;
 Scratch.UserSession.load(function(err, user) {
 	user.cloudSession(BANK_ID, function(err, cloud) {
 		cloud.on("set", function(n, v) {
 			cloudG++;
 			if(n == "☁ SignUp"&& cloudG>4){
-				fs.writeFile(f_path, readFile()+"\n"+decode(v), function(err){
+				text2add = decode(v).split("|");
+				text2add = text2add[0]+ "|" + text2add[1];
+				fs.writeFile(f_path, readFile()+text2add+"\n", function(err){
 					if (err) console.log(err);
-					console.log("Signed up!");
+					console.log(decode(v).split("|")[0] + " has Signed up! Sent Data = " + text2add);
 				});
 			}
 		});
 	});
 });
 
-
+console.log("[SERVER RESTART] Ready; Listening...\n");
 Scratch.UserSession.load(function(err, user) {
 	user.cloudSession(THIS_PROJ, function(err, cloud) {
 		cloud.on("set", function(n, v) {
