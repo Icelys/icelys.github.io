@@ -2,5 +2,4 @@
 
 while :
   do sudo node Bank1.js
-  sleep 2
-end
+done
