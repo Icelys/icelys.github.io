@@ -15,3 +15,7 @@ h3 {
 body {
   background-color: #F0F0F0;
 }
+
+div.main {
+  top: 100;
+}
